@@ -1,182 +1,292 @@
- <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Интерактивный пёсик Тяу на столах кафе</title>
-    <!-- Подключаем бесплатную AR-библиотеку от Google -->
-    <script type="module" src="https://unpkg.com"></script>
-    <style>
-      body { margin: 0; font-family: sans-serif; background: #fff; overflow: hidden; user-select: none; }
-      model-viewer { width: 100vw; height: 100vh; }
-      
-      /* МЕНЮ В ДОФАМИНОВОМ СТИЛЕ КАФЕ */
-      .menu { 
-        position: absolute; 
-        bottom: 35px; 
-        left: 50%; 
-        transform: translateX(-50%); 
-        display: flex; 
-        gap: 10px; 
-        z-index: 999; 
-        width: 92%; 
-        justify-content: center; 
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Интерактивный пёсик Тяу</title>
+
+  <script type="module"
+    src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f5f2ed;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    model-viewer {
+      display: block;
+      width: 100vw;
+      height: 100dvh;
+      background: #f5f2ed;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-action,
+    .ar-launch,
+    .close-btn {
+      border: none;
+      background: #FFB7CE;
+      color: #5a3443;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+
+    .ar-launch {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      padding: 14px 20px;
+      border-radius: 24px;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .ar-launch:active,
+    .btn-action:active,
+    .close-btn:active {
+      transform: scale(.96);
+      background: #FFA1C3;
+    }
+
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 16px;
+      z-index: 1100;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 20px;
+    }
+
+    .menu {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: 94%;
+      z-index: 1000;
+    }
+
+    .btn-action {
+      padding: 13px 16px;
+      border-radius: 24px;
+      font-size: 14px;
+    }
+
+    #status {
+      position: fixed;
+      left: 50%;
+      bottom: 100px;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 90%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(30, 30, 30, .82);
+      color: white;
+      font-size: 14px;
+      text-align: center;
+      z-index: 1200;
+      display: none;
+    }
+
+    #goodbye-screen {
+      position: fixed;
+      inset: 0;
+      background: #FFF200;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      z-index: 2000;
+    }
+
+    #goodbye-screen h1 {
+      color: #a34c70;
+      font-size: 30px;
+    }
+
+    #goodbye-screen p {
+      color: #555;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 480px) {
+      .menu { gap: 8px; }
+      .btn-action { padding: 12px; font-size: 13px; }
+      .ar-launch { top: 18px; font-size: 13px; }
+    }
+  </style>
+</head>
+
+<body>
+  <model-viewer
+    id="tyau"
+    src="./Tyau.glb"
+    alt="3D-модель пёсика Тяу"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="1.5"
+    exposure="1"
+    loading="eager">
+
+   
+    <button slot="ar-button" style="display:none"
+      aria-hidden="true" tabindex="-1">
+      Запустить AR
+    </button>
+  </model-viewer>
+
+  <button class="ar-launch" id="ar-launch">
+    📸 Оживить пёсика Тяу на столе!
+  </button>
+
+  <button class="close-btn" id="close-btn" aria-label="Закрыть">
+    ✖
+  </button>
+
+  <div class="menu" id="menu">
+    <button class="btn-action"
+      onclick="actionTyau('anim-eat', 'sound-eat')">
+      🍪 Покормить
+    </button>
+
+    <button class="btn-action"
+      onclick="actionTyau('anim-tickle', 'sound-bark')">
+      ❤️ Почесать пузико
+    </button>
+
+    <button class="btn-action"
+      onclick="actionTyau('anim-tail', 'sound-tail')">
+      🔄 За хвостиком!
+    </button>
+  </div>
+
+  <div id="status" role="status" aria-live="polite"></div>
+
+  <div id="goodbye-screen">
+    <h1>Спасибо, что поиграли с Тяу! 🐕✨</h1>
+    <p>Хорошего и вкусного дня в нашем кафе! ☕️🧁</p>
+  </div>
+
+  <!-- Пока не подключены реальные звуковые файлы -->
+  <audio id="sound-eat" preload="auto"></audio>
+  <audio id="sound-bark" preload="auto"></audio>
+  <audio id="sound-tail" preload="auto"></audio>
+
+  <script>
+    const tyauModel = document.getElementById('tyau');
+    const statusBox = document.getElementById('status');
+    const arButton = document.getElementById('ar-launch');
+
+    let isAnimating = false;
+    let statusTimer;
+
+    function showStatus(message) {
+      statusBox.textContent = message;
+      statusBox.style.display = 'block';
+
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => {
+        statusBox.style.display = 'none';
+      }, 5000);
+    }
+
+    // Сообщаем, если 3D-модель не загрузилась.
+    tyauModel.addEventListener('load', () => {
+      showStatus('Тяу готов к игре! 🐶');
+    });
+
+    tyauModel.addEventListener('error', () => {
+      showStatus(
+        'Не удалось загрузить Tyau.glb. Проверь файл и путь к нему.'
+      );
+    });
+
+    // Запуск дополненной реальности.
+    arButton.addEventListener('click', async () => {
+      if (!tyauModel.loaded) {
+        showStatus('Тяу ещё загружается. Подожди немного…');
+        return;
       }
-      
-      /* КОНФЕТНО-РОЗОВЫЕ КНОПКИ */
-      button.btn-action { 
-        padding: 14px 18px; 
-        font-size: 15px; 
-        border: none; 
-        border-radius: 25px; 
-        background: #FFB7CE; /* Пастельный розовый */
-        color: #FFF200; /* Яркий жёлтый текст */
-        font-weight: 900; 
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.2); 
-        cursor: pointer; 
-        box-shadow: 0 6px 12px rgba(255, 183, 206, 0.4); 
-        transition: 0.2s ease; 
-        white-space: nowrap; 
-      }
-      button.btn-action:active { 
-        transform: scale(0.92); 
-        background: #FFA1C3; 
+
+      if (!tyauModel.canActivateAR) {
+        showStatus(
+          
+        );
+        return;
       }
 
-      /* РОЗОВАЯ КНОПКА-КРЕСТИК ВВЕРХУ СПРАВА */
-      .close-btn {
-        position: absolute;
-        top: 25px;
-        right: 25px;
-        z-index: 1000;
-        width: 45px;
-        height: 45px;
-        border: none;
-        border-radius: 50%; 
-        background: #FFB7CE;
-        color: #FFF200;
-        font-size: 22px;
-        font-weight: 900;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        transition: 0.2s;
-      }
-      .close-btn:active { transform: scale(0.9); background: #FFA1C3; }
-
-      /* ЭКРАН ДОФАМИНОВОГО ПРОЩАНИЯ */
-      #goodbye-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: #FFF200; /* Фирменный жёлтый фон */
-        display: none; 
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        text-align: center;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-      #goodbye-screen h1 {
-        color: #FFB7CE; /* Розовый текст */
-        font-size: 32px;
-        font-weight: 900;
-        margin-bottom: 15px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-      }
-      #goodbye-screen p {
-        color: #555;
-        font-size: 18px;
-        font-weight: bold;
-      }
-
-      /* ПАРАМЕТРИЧЕСКИЕ АНИМАЦИИ МОДЕЛИ */
-      @keyframes jumpEat {
-        0%, 100% { transform: translateY(0) scale(1); }
-        30% { transform: translateY(-0.25m) scale(1.1, 0.9); }
-        50% { transform: translateY(-0.4m) scale(0.9, 1.1); }
-        70% { transform: translateY(0) scale(1.1, 0.9); }
-      }
-      @keyframes tickleShake {
-        0%, 100% { transform: rotate(0deg) scale(1); }
-        20%, 60% { transform: rotate(-6deg) scale(1.05, 0.95); }
-        40%, 80% { transform: rotate(6deg) scale(0.95, 1.05); }
-      }
-      @keyframes tailChase {
-        0% { transform: rotateY(0deg); }
-        100% { transform: rotateY(360deg); }
-      }
-      .anim-eat { animation: jumpEat 0.7s ease-in-out 3; }
-      .anim-tickle { animation: tickleShake 0.2s linear 8; }
-      .anim-tail { animation: tailChase 0.4s linear 3; }
-    </style>
-  </head>
-  <body>
-
-    <!-- Кнопка закрытия игры всегда поверх всего -->
-    <button class="close-btn" onclick="exitGame()">✖</button>
-
-    <!-- Главное AR окно с пёсиком Тяу -->
-    <model-viewer id="tyau" src="Tyau.glb.txt" ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" shadow-intensity="1.5" shadow-softness="1">
- <button slot="ar-button" style="position: absolute; top: 25px; left: 25px; background: #FFB7CE; color:#FFF200; padding: 12px 20px; border-radius: 20px; border:none; font-weight:bold; font-size:14px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        📸 Оживить пёсика Тяу на столе!
-      </button>
-      
-      <!-- Интерактивное меню -->
-      <div class="menu">
-        <button class="btn-action" onclick="actionTyau('anim-eat', 'sound-eat')">🍪 Покормить</button>
-        <button class="btn-action" onclick="actionTyau('anim-tickle', 'sound-bark')">❤️ Почесать пузико</button>
-        <button class="btn-action" onclick="actionTyau('anim-tail', 'sound-tail')">🔄 За хвостиком!</button>
-      </div>
-    </model-viewer>
-
-    <!-- Экран дофаминового прощания -->
-    <div id="goodbye-screen">
-      <h1>Спасибо, что поиграли с Тяу! 🐕✨</h1>
-      <p>Хорошего и вкусного дня в нашем кафе! ☕️🧁</p>
-    </div>
-
-    <!-- Облачные интернет-аудиоплееры для звуков интерактива -->
-    <audio id="sound-eat" src="https://google.com" preload="auto"></audio>
-    <audio id="sound-bark" src="https://google.com" preload="auto"></audio>
-    <audio id="sound-tail" src="https://google.com" preload="auto"></audio>
-
-    <script>
-      const tyauModel = document.querySelector('#tyau');
-      let isAnimating = false;
-
-      // Логика интерактива пёсика со звуком
-      function actionTyau(animClass, soundId) {
-        if (isAnimating) return;
-        isAnimating = true;
-
-        const sound = document.getElementById(soundId);
-        if (sound) {
-          sound.currentTime = 0;
-          sound.play().catch(e => console.log("Включите звук тапом по экрану"));
-        }
-
-        tyauModel.classList.add(animClass);
+      try {
+        await tyauModel.activateAR();
+      } catch (error) {
+        console.error('Ошибка запуска AR:', error);
+        showStatus(
         
-        setTimeout(() => {
-          tyauModel.classList.remove(animClass);
-          isAnimating = false;
-        }, 2100);
+        );
+      }
+    });
+
+    // Интерактивные кнопки.
+    function actionTyau(animClass, soundId) {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      const sound = document.getElementById(soundId);
+
+      if (sound & sound.getAttribute('src')) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
       }
 
-      // Функция кнопки закрытия (Крестик)
-      function exitGame() {
-        tyauModel.style.display = 'none';
-        document.querySelector('.close-btn').style.display = 'none';
-        
-        const goodbye = document.getElementById('goodbye-screen');
-        goodbye.style.display = 'flex';
-      }
-    </script>
-  </body>
+      tyauModel.classList.remove(
+        'anim-eat', 'anim-tickle', 'anim-tail'
+      );
+
+      void tyauModel.offsetWidth;
+      tyauModel.classList.add(animClass);
+
+      setTimeout(() => {
+        tyauModel.classList.remove(animClass);
+        isAnimating = false;
+      }, 2100);
+    }
+
+    // Закрытие игры.
+    document.getElementById('close-btn').addEventListener('click', () => {
+      tyauModel.style.display = 'none';
+      arButton.style.display = 'none';
+      document.getElementById('menu').style.display = 'none';
+      document.getElementById('close-btn').style.display = 'none';
+      statusBox.style.display = 'none';
+      document.getElementById('goodbye-screen').style.display = 'flex';
+    });
+  </script>
+</body>
 </html>
+```
